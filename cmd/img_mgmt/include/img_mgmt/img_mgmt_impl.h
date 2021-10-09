@@ -156,6 +156,21 @@ int img_mgmt_impl_upload_inspect(const struct img_mgmt_upload_req *req,
                                  struct img_mgmt_upload_action *action,
                                  const char **errstr);
 
+/**
+ * Updates dynamic image slot storage sizes to accommodate new a image.
+ *
+ * If new image is too large to fit in current partition, grow both partitions
+ * to accommodate new image size, plus one extra sector for image swap.
+ *
+ * When confirming, if partition is significantly larger than necessary for
+ * confirmed image, partition will be shrunk.
+ *
+ * @param action                Metadata about the new image.
+ *
+ * @return                      0 on success
+ */
+int img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action);
+
 #define ERASED_VAL_32(x) (((x) << 24) | ((x) << 16) | ((x) << 8) | (x))
 int img_mgmt_impl_erased_val(int slot, uint8_t *erased_val);
 

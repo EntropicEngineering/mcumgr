@@ -491,6 +491,14 @@ img_mgmt_upload(struct mgmt_ctxt *ctxt)
          */
         g_img_mgmt_state.off = 0;
 
+#if IMG_MGMT_DYNAMIC_SIZE
+        rc = img_mgmt_impl_resize_slots(&action);
+        if (rc != 0) {
+            img_mgmt_dfu_stopped();
+            return rc;
+        }
+#endif
+
         img_mgmt_dfu_started();
         cmd_status_arg.status = IMG_MGMT_ID_UPLOAD_STATUS_START;
 
