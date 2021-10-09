@@ -106,8 +106,8 @@ img_mgmt_find_tlvs(int slot, size_t *start_off, size_t *end_off,
  * Reads the version and build hash from the specified image slot.
  */
 int
-img_mgmt_read_info(int image_slot, struct image_version *ver, uint8_t *hash,
-                   uint32_t *flags)
+img_mgmt_read_info(int image_slot, struct image_version *ver,
+                   uint8_t *hash, uint32_t *flags, size_t *size)
 {
 
 #if IMG_MGMT_DUMMY_HDR
@@ -228,6 +228,10 @@ img_mgmt_read_info(int image_slot, struct image_version *ver, uint8_t *hash,
         return MGMT_ERR_EUNKNOWN;
     }
 
+    if (size != NULL) {
+        *size = data_end;
+    }
+
     return 0;
 }
 
@@ -242,7 +246,7 @@ img_mgmt_find_by_ver(struct image_version *find, uint8_t *hash)
     struct image_version ver;
 
     for (i = 0; i < 2 * IMG_MGMT_UPDATABLE_IMAGE_NUMBER; i++) {
-        if (img_mgmt_read_info(i, &ver, hash, NULL) != 0) {
+        if (img_mgmt_read_info(i, &ver, hash, NULL, NULL) != 0) {
             continue;
         }
         if (!memcmp(find, &ver, sizeof(ver))) {
@@ -263,7 +267,7 @@ img_mgmt_find_by_hash(uint8_t *find, struct image_version *ver)
     uint8_t hash[IMAGE_HASH_LEN];
 
     for (i = 0; i < 2 * IMG_MGMT_UPDATABLE_IMAGE_NUMBER; i++) {
-        if (img_mgmt_read_info(i, ver, hash, NULL) != 0) {
+        if (img_mgmt_read_info(i, ver, hash, NULL, NULL) != 0) {
             continue;
         }
         if (!memcmp(hash, find, IMAGE_HASH_LEN)) {
@@ -302,7 +306,7 @@ img_mgmt_erase(struct mgmt_ctxt *ctxt)
      * First check if image info is valid.
      * This check is done incase the flash area has a corrupted image.
      */
-    rc = img_mgmt_read_info(1, &ver, NULL, NULL);
+    rc = img_mgmt_read_info(1, &ver, NULL, NULL, NULL);
 
     if (rc == 0) {
         /* Image info is valid. */
@@ -371,7 +375,7 @@ img_mgmt_upload_log(bool is_first, bool is_last, int status)
 
     if (is_last || status != 0) {
         /* Log the image hash if we know it. */
-        rc = img_mgmt_read_info(1, NULL, hash, NULL);
+        rc = img_mgmt_read_info(1, NULL, hash, NULL, NULL);
         if (rc != 0) {
             hashp = NULL;
         } else {
@@ -611,7 +615,7 @@ img_mgmt_register_callbacks(const img_mgmt_dfu_callbacks_t *cb_struct)
 int
 img_mgmt_my_version(struct image_version *ver)
 {
-    return img_mgmt_read_info(IMG_MGMT_BOOT_CURR_SLOT, ver, NULL, NULL);
+    return img_mgmt_read_info(IMG_MGMT_BOOT_CURR_SLOT, ver, NULL, NULL, NULL);
 }
 
 void

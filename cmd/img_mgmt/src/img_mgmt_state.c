@@ -141,7 +141,7 @@ img_mgmt_state_set_pending(int slot, int permanent)
 
 done:
     /* Log the image hash if we know it. */
-    if (img_mgmt_read_info(slot, NULL, hash, NULL)) {
+    if (img_mgmt_read_info(slot, NULL, hash, NULL, NULL)) {
         hashp = NULL;
     } else {
         hashp = hash;
@@ -205,7 +205,7 @@ img_mgmt_state_read(struct mgmt_ctxt *ctxt)
                                        CborIndefiniteLength);
 
     for (i = 0; i < 2 * IMG_MGMT_UPDATABLE_IMAGE_NUMBER; i++) {
-        rc = img_mgmt_read_info(i, &ver, hash, &flags);
+        rc = img_mgmt_read_info(i, &ver, hash, &flags, NULL);
         if (rc != 0) {
             continue;
         }
