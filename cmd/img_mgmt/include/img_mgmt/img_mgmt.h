@@ -125,16 +125,17 @@ void img_mgmt_register_group(void);
  */ 
 void img_mgmt_unregister_group(void);
 
-/*
+/**
  * @brief Read info of an image give the slot number
  *
  * @param image_slot     Image slot to read info from
  * @param image_version  Image version to be filled up
  * @param hash           Ptr to the read image hash
  * @param flags          Ptr to flags filled up from the image
+ * @param size           Ptr to total size used by image in bytes
  */
 int img_mgmt_read_info(int image_slot, struct image_version *ver,
-                       uint8_t *hash, uint32_t *flags);
+                       uint8_t *hash, uint32_t *flags, size_t *size);
 
 /**
  * @brief Get the current running image version
