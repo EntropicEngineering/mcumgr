@@ -64,6 +64,7 @@ zephyr_img_mgmt_slot_to_image(int slot)
     return 0;
 }
 
+#if CONFIG_FLASH_MAP_DYNAMIC
 static int
 zephyr_img_mgmt_get_sibling_slot(int slot)
 {
@@ -80,6 +81,7 @@ zephyr_img_mgmt_get_sibling_slot(int slot)
 //    }
 //    return 0;
 }
+#endif
 
 /**
  * Determines if the specified area of flash is completely unwritten.
@@ -329,6 +331,11 @@ img_mgmt_impl_write_confirmed(void)
 {
     int rc;
 
+    rc = boot_write_img_confirmed();
+    if (rc != 0) {
+        return MGMT_ERR_EUNKNOWN;
+    }
+
 #if CONFIG_FLASH_MAP_DYNAMIC
     /*
      * Shrink partition for slot-0 if it's larger than image plus one extra
@@ -359,15 +366,13 @@ img_mgmt_impl_write_confirmed(void)
         partition_info.fa_id = fa->fa_id;
         partition_info.fa_off = fa->fa_off;
         partition_info.fa_size = partition_size;
-    }
 
-    // TODO
+        rc = set_partition_by_id(&partition_info);
+        if (rc != 0) {
+            return rc;
+        }
+    }
 #endif
-
-    rc = boot_write_img_confirmed();
-    if (rc != 0) {
-        return MGMT_ERR_EUNKNOWN;
-    }
 
     return 0;
 }
@@ -712,10 +717,10 @@ img_mgmt_impl_upload_inspect(const struct img_mgmt_upload_req *req,
     return 0;
 }
 
+#if CONFIG_FLASH_MAP_DYNAMIC
 int
 img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 {
-#if CONFIG_FLASH_MAP_DYNAMIC
     int active_slot;
     uint8_t align;
     size_t img_size, partition_size;
@@ -794,8 +799,7 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
         partition_info.fa_size = fa->fa_size;
 
         flash_area_close(fa);
-        rc = flash_area_open(zephyr_img_mgmt_flash_area_id(action->area_id),
-                             &fa);
+        rc = flash_area_open(action->area_id, &fa);
         if (rc != 0) {
             return rc;
         }
@@ -827,7 +831,7 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
                 }
 
                 /* Now update action->area_id partition. */
-                partition_info.fa_id = zephyr_img_mgmt_flash_area_id(action->area_id);
+                partition_info.fa_id = action->area_id;
                 partition_info.fa_size = partition_size;
 
                 rc = set_partition_by_id(&partition_info);
@@ -837,7 +841,7 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
             } else {
                 /* action->area_id partition is lower, so update both partitions. */
 
-                partition_info.fa_id = zephyr_img_mgmt_flash_area_id(action->area_id);
+                partition_info.fa_id = action->area_id;
                 /* Maintain current offset for action->area_id partition. */
                 partition_info.fa_off = fa->fa_off;
                 partition_info.fa_size = partition_size;
@@ -861,9 +865,9 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
     }
 
     flash_area_close(fa);
-#endif
     return 0;
 }
+#endif
 
 int
 img_mgmt_impl_erased_val(int slot, uint8_t *erased_val)
