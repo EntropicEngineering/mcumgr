@@ -25,7 +25,6 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <assert.h>
 #include <drivers/flash.h>
 #include <storage/flash_map.h>
-#include <storage/flash_map_dynamic.h>
 #include <zephyr.h>
 #include <soc.h>
 #include <init.h>
@@ -36,6 +35,10 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <img_mgmt/img_mgmt.h>
 #include <img_mgmt/image.h>
 #include "../../../src/img_mgmt_priv.h"
+
+#if CONFIG_FLASH_MAP_DYNAMIC
+#include <storage/flash_map_dynamic.h>
+#endif
 
 BUILD_ASSERT(CONFIG_IMG_MGMT_UPDATABLE_IMAGE_NUMBER == 1 ||
              (CONFIG_IMG_MGMT_UPDATABLE_IMAGE_NUMBER == 2 &&
@@ -712,6 +715,7 @@ img_mgmt_impl_upload_inspect(const struct img_mgmt_upload_req *req,
 int
 img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 {
+#if CONFIG_FLASH_MAP_DYNAMIC
     int active_slot;
     uint8_t align;
     size_t img_size, partition_size;
@@ -857,7 +861,7 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
     }
 
     flash_area_close(fa);
-
+#endif
     return 0;
 }
 
