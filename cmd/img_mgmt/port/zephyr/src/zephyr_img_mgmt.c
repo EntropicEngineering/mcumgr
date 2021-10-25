@@ -371,9 +371,9 @@ img_mgmt_impl_write_confirmed(void)
 
         rc = set_partition_by_id(&partition_info);
         if (rc != 0) {
-            return rc;
+            return MGMT_ERR_EUNKNOWN;
         }
-        LOG_DBG("Partition %d shrunk to %d bytes", fa->fa_id, partition_size);
+        LOG_INF("Partition %d shrunk to %d bytes", fa->fa_id, partition_size);
     }
 #endif
 
@@ -735,7 +735,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
     /* Get total used size of current image. */
     rc = img_mgmt_read_info(active_slot, NULL, NULL, NULL, &img_size);
     if (rc != 0) {
-        return rc;
+        LOG_ERR("Unable to read image info, error %d", rc);
+        return MGMT_ERR_EUNKNOWN;
     }
 
     /* Ensure flash partition can accommodate larger of the two images. */
@@ -750,7 +751,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
     struct flash_area const *fa;
     rc = flash_area_open(zephyr_img_mgmt_flash_area_id(active_slot), &fa);
     if (rc != 0) {
-        return rc;
+        LOG_ERR("Failed to open partition for slot %d, error %d", active_slot, rc);
+        return MGMT_ERR_EUNKNOWN;
     }
 
     align = flash_area_align(fa);
@@ -761,6 +763,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
     if (partition_size > fa->fa_size /* fa_size must be already aligned */) {
         /* Grow partitions for active_slot and action->area_id. */
 
+        LOG_INF("Growing partitions");
+
         if (active_slot > action->area_id) {
             /* Size calculations must start with lower partition. */
             active_slot = action->area_id;
@@ -768,7 +772,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
             flash_area_close(fa);
             rc = flash_area_open(zephyr_img_mgmt_flash_area_id(active_slot), &fa);
             if (rc != 0) {
-                return rc;
+                LOG_ERR("Failed to open partition for slot %d, error %d", active_slot, rc);
+                return MGMT_ERR_EUNKNOWN;
             }
         }
 
@@ -779,7 +784,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 
         rc = set_partition_by_id(&partition_info);
         if (rc != 0) {
-            return rc;
+            LOG_ERR("Failed to save partition info in settings, error %d", rc);
+            return MGMT_ERR_EUNKNOWN;
         }
         LOG_DBG("Set partition %d to offset %#10x, size %#10x",
                 partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
@@ -790,7 +796,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 
         rc = set_partition_by_id(&partition_info);
         if (rc != 0) {
-            return rc;
+            LOG_ERR("Failed to save partition info in settings, error %d", rc);
+            return MGMT_ERR_EUNKNOWN;
         }
         LOG_DBG("Set partition %d to offset %#10x, size %#10x",
                 partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
@@ -808,11 +815,14 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
         flash_area_close(fa);
         rc = flash_area_open(action->area_id, &fa);
         if (rc != 0) {
-            return rc;
+            LOG_ERR("Failed to open flash area %d, error %d", action->area_id, rc);
+            return MGMT_ERR_EUNKNOWN;
         }
 
         if (partition_size > fa->fa_size) {
             /* Grow action->area_id partition */
+
+            LOG_INF("Growing image partition");
 
             if (active_slot < action->area_id) {
                 /* First check size of active_slot partition. */
@@ -824,7 +834,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 
                     rc = set_partition_by_id(&partition_info);
                     if (rc != 0) {
-                        return rc;
+                        LOG_ERR("Failed to save partition info in settings, error %d", rc);
+                        return MGMT_ERR_EUNKNOWN;
                     }
                     LOG_DBG("Set partition %d to offset %#10x, size %#10x",
                             partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
@@ -845,7 +856,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 
                 rc = set_partition_by_id(&partition_info);
                 if (rc != 0) {
-                    return rc;
+                    LOG_ERR("Failed to save partition info in settings, error %d", rc);
+                    return MGMT_ERR_EUNKNOWN;
                 }
                 LOG_DBG("Set partition %d to offset %#10x, size %#10x",
                         partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
@@ -859,7 +871,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 
                 rc = set_partition_by_id(&partition_info);
                 if (rc != 0) {
-                    return rc;
+                    LOG_ERR("Failed to save partition info in settings, error %d", rc);
+                    return MGMT_ERR_EUNKNOWN;
                 }
                 LOG_DBG("Set partition %d to offset %#10x, size %#10x",
                         partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
@@ -870,7 +883,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
 
                 rc = set_partition_by_id(&partition_info);
                 if (rc != 0) {
-                    return rc;
+                    LOG_ERR("Failed to save partition info in settings, error %d", rc);
+                    return MGMT_ERR_EUNKNOWN;
                 }
                 LOG_DBG("Set partition %d to offset %#10x, size %#10x",
                         partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
