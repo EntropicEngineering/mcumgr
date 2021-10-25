@@ -36,6 +36,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <img_mgmt/image.h>
 #include "../../../src/img_mgmt_priv.h"
 
+#include <autoconf.h>
+
 #if CONFIG_FLASH_MAP_DYNAMIC
 #include <storage/flash_map_dynamic.h>
 #endif
@@ -371,6 +373,7 @@ img_mgmt_impl_write_confirmed(void)
         if (rc != 0) {
             return rc;
         }
+        LOG_DBG("Partition %d shrunk to %d bytes", fa->fa_id, partition_size);
     }
 #endif
 
@@ -778,6 +781,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
         if (rc != 0) {
             return rc;
         }
+        LOG_DBG("Set partition %d to offset %#10x, size %#10x",
+                partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
 
         /* Update upper partition info. */
         partition_info.fa_id = zephyr_img_mgmt_flash_area_id(active_slot + 1);
@@ -787,6 +792,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
         if (rc != 0) {
             return rc;
         }
+        LOG_DBG("Set partition %d to offset %#10x, size %#10x",
+                partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
     } else {
         /*
          * Check that partition size for action->area_id is sufficient for
@@ -819,6 +826,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
                     if (rc != 0) {
                         return rc;
                     }
+                    LOG_DBG("Set partition %d to offset %#10x, size %#10x",
+                            partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
 
                     /*
                      * Update offset for action->area_id partition based on
@@ -838,6 +847,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
                 if (rc != 0) {
                     return rc;
                 }
+                LOG_DBG("Set partition %d to offset %#10x, size %#10x",
+                        partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
             } else {
                 /* action->area_id partition is lower, so update both partitions. */
 
@@ -850,6 +861,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
                 if (rc != 0) {
                     return rc;
                 }
+                LOG_DBG("Set partition %d to offset %#10x, size %#10x",
+                        partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
 
                 /* Update active_slot partition due to prior partition update. */
                 partition_info.fa_id = zephyr_img_mgmt_flash_area_id(active_slot);
@@ -859,6 +872,8 @@ img_mgmt_impl_resize_slots(struct img_mgmt_upload_action const *action)
                 if (rc != 0) {
                     return rc;
                 }
+                LOG_DBG("Set partition %d to offset %#10x, size %#10x",
+                        partition_info.fa_id, partition_info.fa_off, partition_info.fa_size);
             }
 
         }
